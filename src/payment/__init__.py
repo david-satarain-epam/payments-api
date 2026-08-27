@@ -1,0 +1,1 @@
+"""Payment module — Core payment processing."""

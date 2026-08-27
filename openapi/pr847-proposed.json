@@ -1,0 +1,46 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Payment API",
+    "version": "2.3.0",
+    "description": "PR #847 — Add partial refund support"
+  },
+  "paths": {
+    "/refund": {
+      "post": {
+        "summary": "Process a single refund (now with partial refund support)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refund processed"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RefundRequest": {
+        "type": "object",
+        "required": ["refund_id", "transaction_id", "amount", "reason", "customer_email"],
+        "properties": {
+          "refund_id": {"type": "string"},
+          "transaction_id": {"type": "string"},
+          "amount": {"type": "number", "format": "decimal"},
+          "reason": {"type": "string"},
+          "customer_email": {"type": "string"},
+          "partial_refund_amount": {"type": "number", "format": "decimal"}
+        }
+      }
+    }
+  }
+}

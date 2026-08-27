@@ -1,0 +1,80 @@
+# ============================================================
+# Risk Policy — Deterministic Scoring Rules
+#
+# Used by: Change Impact Agent (ADK) → risk score calculation
+#          Impact Context MCP Server → get_business_criticality()
+# ============================================================
+
+# ── Path-based minimum risk ──
+path_rules:
+  - pattern: "src/payment/**"
+    minimum_risk: MEDIUM
+    reason: "Core payment processing — TIER 1"
+
+  - pattern: "src/auth/**"
+    minimum_risk: HIGH
+    reason: "Authentication changes affect ALL services and users"
+
+  - pattern: "src/billing/**"
+    minimum_risk: MEDIUM
+    reason: "Billing accuracy impacts revenue recognition"
+
+  - pattern: "src/notifications/**"
+    minimum_risk: LOW
+    reason: "Non-critical. Asynchronous. Graceful degradation possible."
+
+  - pattern: "src/utils/**"
+    minimum_risk: LOW
+    reason: "Utility code. Wide impact but low criticality per change."
+
+# ── Risk escalation rules ──
+escalation_rules:
+  - condition: "api_schema_changed"
+    escalate_by: 1
+    reason: "Schema changes can break consumers"
+
+  - condition: "multiple_services_affected"
+    threshold: 3
+    escalate_by: 1
+    reason: "Cross-service changes increase blast radius"
+
+  - condition: "tier_1_affected"
+    escalate_by: 1
+    reason: "TIER 1 services have zero downtime tolerance"
+
+  - condition: "new_endpoint_no_tests"
+    set_risk: CRITICAL
+    reason: "Zero test coverage. Cannot assess safety."
+
+  - condition: "breaking_change"
+    escalate_by: 1
+    reason: "Breaking changes require consumer updates"
+
+# ── Risk level definitions ──
+risk_levels:
+  LOW:
+    strategy: DIRECT
+    decision: APPROVE
+    description: "Minor changes. Low blast radius. Basic smoke tests sufficient."
+
+  MEDIUM:
+    strategy: GATED
+    decision: APPROVE
+    description: "Logic changes. Moderate blast radius. Full test suite + security scan."
+
+  HIGH:
+    strategy: CANARY
+    decision: ROLLOUT
+    description: "Schema/contract changes. Large blast radius. Canary deploy with monitoring."
+
+  CRITICAL:
+    strategy: NONE
+    decision: POSTPONE
+    description: "Breaking changes + TIER 1 + many consumers OR zero test coverage. Human review required."
+
+# ── Monitoring thresholds ──
+monitoring:
+  canary_duration_minutes: 5
+  error_rate_threshold_pct: 1.0
+  latency_p95_threshold_ms: 500
+  rollback_on_breach: true

@@ -1,0 +1,68 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Payment API",
+    "version": "2.2.0",
+    "description": "Core payment processing API — TIER 1"
+  },
+  "paths": {
+    "/refund": {
+      "post": {
+        "summary": "Process a single refund",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Refund processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RefundRequest": {
+        "type": "object",
+        "required": ["refund_id", "transaction_id", "amount", "reason", "customer_email"],
+        "properties": {
+          "refund_id": {"type": "string"},
+          "transaction_id": {"type": "string"},
+          "amount": {"type": "integer"},
+          "reason": {"type": "string"},
+          "customer_email": {"type": "string"}
+        }
+      },
+      "RefundResponse": {
+        "type": "object",
+        "required": ["refund_id", "status", "processed_at", "transaction_id", "amount"],
+        "properties": {
+          "refund_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["PENDING", "PROCESSED", "FAILED"]},
+          "processed_at": {"type": "string", "format": "date-time"},
+          "transaction_id": {"type": "string"},
+          "amount": {"type": "integer"}
+        }
+      }
+    }
+  }
+}

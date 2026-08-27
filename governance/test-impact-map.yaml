@@ -1,0 +1,89 @@
+# ============================================================
+# Test Impact Map
+# 
+# Defines which test categories are required based on:
+# - Service criticality (TIER)
+# - Change type (schema, logic, config, new endpoint)
+# - Risk level
+#
+# Used by: Impact Context MCP Server → get_test_catalog()
+#          Change Impact Agent → test plan generation
+# ============================================================
+
+services:
+  payment-api:
+    tier: 1
+    business_function: "Core payment processing"
+    max_downtime_minutes: 0
+    deployment_window: "Sunday 02:00-06:00 UTC"
+    consumers:
+      internal:
+        - checkout-web
+        - mobile-app
+        - merchant-portal
+        - billing-service
+        - notification-service
+      external:
+        - "7 clients via API Gateway"
+    test_catalog:
+      unit: 12
+      integration: 8
+      contract: 6
+      e2e: 4
+      chaos: 2
+      regression: 10
+      smoke: 2
+      total: 42
+
+  auth-service:
+    tier: 1
+    business_function: "Authentication & SSO"
+    max_downtime_minutes: 0
+    deployment_window: "Sunday 02:00-06:00 UTC"
+    consumers:
+      internal:
+        - all-services
+        - checkout-web
+        - mobile-app
+        - admin-panel
+    test_catalog:
+      unit: 20
+      integration: 10
+      contract: 4
+      e2e: 6
+      chaos: 1
+      regression: 15
+      smoke: 2
+      total: 56
+
+  notification-service:
+    tier: 3
+    business_function: "Email & push notifications"
+    max_downtime_minutes: 30
+    deployment_window: "Any time"
+    consumers:
+      internal:
+        - checkout-web
+        - mobile-app
+    test_catalog:
+      unit: 8
+      integration: 4
+      contract: 2
+      e2e: 2
+      smoke: 1
+      total: 17
+
+# ── Strategy selection rules ──
+strategy_rules:
+  high_risk:
+    required_categories: [unit, integration, contract, e2e, smoke]
+    optional_categories: [chaos, regression]
+  medium_risk:
+    required_categories: [unit, integration, contract]
+    optional_categories: [e2e, smoke]
+  low_risk:
+    required_categories: [unit, smoke]
+    optional_categories: [integration]
+  new_endpoint:
+    required_categories: []
+    note: "ZERO coverage. POSTPONE. Suggest all categories."
