@@ -1,0 +1,1 @@
+"""Smoke tests — Quick health checks. Run before every deploy."""

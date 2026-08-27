@@ -1,0 +1,1 @@
+"""Unit tests — Fast, isolated, no external dependencies."""

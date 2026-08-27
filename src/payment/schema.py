@@ -50,6 +50,10 @@ class BatchRefundRequest:
     refunds: List[RefundRequest]
     mode: Optional[str] = "SEQUENTIAL"
 
+    @property
+    def total_refunds(self) -> int:
+        return len(self.refunds)
+
 
 @dataclass
 class BatchRefundResponse:
