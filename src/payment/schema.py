@@ -63,3 +63,16 @@ class BatchRefundResponse:
     processed: int
     failed: int
     results: List[RefundResponse]
+
+@dataclass
+class BatchRefundRequest:
+    refunds: List[RefundRequest]
+    mode: Optional[str] = "SEQUENTIAL"
+
+@dataclass
+class BatchRefundResponse:
+    batch_id: str
+    total_refunds: int
+    processed: int
+    failed: int
+    results: List[RefundResponse]
