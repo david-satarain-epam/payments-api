@@ -15,6 +15,7 @@ class Invoice:
     invoice_id: str
     transaction_id: str
     amount: int
+    currency: str
     status: str
     created_at: str
     updated_at: str

@@ -30,6 +30,7 @@ class RefundRequest:
     refund_id: str
     transaction_id: str
     amount: int          # In cents
+    currency: Currency
     reason: str
     customer_email: str
 
