@@ -23,6 +23,12 @@ def process_refund(request: RefundRequest) -> RefundResponse:
     Raises:
         ValueError: If validation fails.
     """
+    if request.partial_refund_amount is not None:
+        if request.partial_refund_amount <= 0:
+            raise ValueError("partial_refund_amount must be greater than 0")
+        if request.partial_refund_amount > request.amount:
+            raise ValueError("partial_refund_amount cannot exceed total amount")
+        
     # ── Validation ──
     if not request.refund_id:
         raise ValueError("refund_id is required")

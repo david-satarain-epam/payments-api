@@ -29,7 +29,7 @@ class RefundRequest:
     """Single refund request."""
     refund_id: str
     transaction_id: str
-    amount: int          # In cents
+    amount: float          # In cents
     reason: str
     customer_email: str
 
