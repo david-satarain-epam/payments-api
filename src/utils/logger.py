@@ -3,6 +3,7 @@ Structured logging utility.
 Outputs JSON-formatted logs for Cloud Logging compatibility.
 """
 
+from dataclasses import asdict
 import json
 from datetime import datetime, timezone
 from enum import Enum
@@ -14,6 +15,24 @@ class LogLevel(str, Enum):
     INFO = "INFO"
     WARN = "WARN"
     ERROR = "ERROR"
+
+# NUEVO: structured Cloud Logging format
+@dataclass
+class LogEntry:
+    severity: str
+    message: str
+    timestamp: str
+    source: str = "payment-api"
+    data: Optional[dict] = None
+
+def log(level: LogLevel, message: str, data: Optional[dict] = None) -> None:
+    entry = LogEntry(
+        severity=level.value,
+        message=message,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        data=data,
+    )
+    print(json.dumps(asdict(entry)))
 
 
 def log(level: LogLevel, message: str, data: Optional[dict] = None) -> None:
