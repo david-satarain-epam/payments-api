@@ -4,6 +4,37 @@ Auth service — OAuth2 authentication.
 TIER 1 service. Affects ALL consumers.
 Changes here = total outage risk.
 """
+# NUEVO
+from enum import Enum
+from typing import Optional
+
+class OAuthProvider(str, Enum):
+    GOOGLE = "GOOGLE"
+    GITHUB = "GITHUB"
+    MICROSOFT = "MICROSOFT"
+
+@dataclass
+class OAuthConfig:
+    client_id: str
+    client_secret: str
+    redirect_uri: str
+    scope: List[str]
+    provider: OAuthProvider              
+
+@dataclass  
+class PKCEParams:                        
+    code_verifier: str
+    code_challenge: str
+    code_challenge_method: str = "S256"
+
+def exchange_code_for_token(
+    code: str, 
+    config: OAuthConfig,
+    pkce: Optional[PKCEParams] = None    
+) -> TokenResponse:
+    if pkce:
+        if not pkce.code_verifier or not pkce.code_challenge:
+            raise ValueError("PKCE verifier and challenge required")
 
 from dataclasses import dataclass
 from datetime import datetime
