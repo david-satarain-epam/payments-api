@@ -22,16 +22,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: 20
+          python-version: '3.12'
 
       - name: Install dependencies
-        run: npm install --no-fund --no-audit
+        run: pip install -r requirements.txt
 
-      - name: Run unit and integration tests
+      - name: Run tests
+        run: python -m pytest tests/ -v --tb=short
+
+      - name: Report results
+        if: always()
         run: |
           echo "PR: ${{ inputs.pr_id }}"
           echo "Test plan: ${{ inputs.test_plan }}"
-          npm test -- --runInBand
