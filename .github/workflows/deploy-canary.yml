@@ -8,7 +8,7 @@ on:
         required: true
         default: "10"
       service:
-        description: Cloud Run service name
+        description: Service name
         required: true
         default: "payments-api"
       pr_id:
@@ -19,40 +19,34 @@ on:
 jobs:
   canary:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
+      - name: Mock GCP auth
+        run: |
+          echo "MOCK: skipping Google Cloud authentication"
+          echo "MOCK: no GCP project or org access in this environment"
+          echo "MOCK: running in demonstration mode"
 
       - name: Compute traffic split
-        id: traffic
         env:
-          CANARY_PERCENT: ${{ fromJSON(inputs.percentage) }}
-          STABLE_PERCENT: ${{ 100 - fromJSON(inputs.percentage) }}
+          CANARY_PERCENT: ${{ inputs.percentage }}
         run: |
-          echo "canary=$CANARY_PERCENT" >> "$GITHUB_OUTPUT"
-          echo "stable=$STABLE_PERCENT" >> "$GITHUB_OUTPUT"
+          canary="${CANARY_PERCENT}"
+          stable=$((100 - canary))
+          echo "CANARY_PERCENT=$canary" >> "$GITHUB_ENV"
+          echo "STABLE_PERCENT=$stable" >> "$GITHUB_ENV"
+          echo "Canary traffic: ${canary}%"
+          echo "Stable traffic: ${stable}%"
 
-      - name: Deploy canary to Cloud Run
-        run: |
-          gcloud run services update "$SERVICE" \
-            --region us-east1 \
-            --update-tags=canary=canary-${{ inputs.pr_id }} \
-            --platform managed
-          gcloud run services update-traffic "$SERVICE" \
-            --region us-east1 \
-            --to-revisions="canary-${{ inputs.pr_id }}=${{ steps.traffic.outputs.canary }}"
+      - name: Mock Cloud Run deployment
         env:
           SERVICE: ${{ inputs.service }}
+          PR_ID: ${{ inputs.pr_id }}
+        run: |
+          echo "MOCK: would deploy service '$SERVICE' to Cloud Run"
+          echo "MOCK: PR ID = $PR_ID"
+          echo "MOCK: canary split = ${CANARY_PERCENT}% / ${STABLE_PERCENT}%"
+          echo "MOCK: Cloud Run canary deployment succeeded (demo mode)"

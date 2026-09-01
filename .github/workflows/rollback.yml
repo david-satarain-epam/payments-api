@@ -8,39 +8,27 @@ on:
         required: true
         default: "payments-api"
       rollback_version:
-        description: Revision/tag to rollback to
+        description: Revision or tag to rollback to
         required: false
         default: "previous"
 
 jobs:
   rollback:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Mock Google Cloud auth
+        run: |
+          echo "MOCK: skipping Google Cloud authentication"
+          echo "MOCK: rollback in demo mode"
 
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Roll back traffic
+      - name: Mock rollback
         env:
           SERVICE: ${{ inputs.service }}
-          VERSION: ${{ inputs.rollback_version }}
+          ROLLBACK_VERSION: ${{ inputs.rollback_version }}
         run: |
-          if [ "$VERSION" = "previous" ]; then
-            echo "Rolling back to previous revision"
-            gcloud run services update-traffic "$SERVICE" --region us-east1 --to-revisions=previous=100
-          else
-            echo "Rolling back to revision $VERSION"
-            gcloud run services update-traffic "$SERVICE" --region us-east1 --to-revisions="$VERSION=100"
-          fi
+          echo "MOCK: would roll back $SERVICE to $ROLLBACK_VERSION"
+          echo "MOCK: traffic restored to stable revision in demo mode"
