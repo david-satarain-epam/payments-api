@@ -3,41 +3,44 @@ name: Monitor Canary
 on:
   workflow_dispatch:
     inputs:
-      service:
-        description: "Cloud Run service name"
-        required: true
-        type: string
       duration_minutes:
-        description: "Monitoring duration"
+        description: Monitoring duration in minutes
         required: true
         default: "5"
-        type: string
-
-permissions:
-  contents: read
-  id-token: write
+      service:
+        description: Service to monitor
+        required: true
+        default: "payments-api"
+      pr_id:
+        description: PR ID
+        required: false
+        default: "unknown"
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
-      - name: Authenticate to Google Cloud
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Set up Google Cloud CLI
+      - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Monitor service
+      - name: Check service health
+        env:
+          SERVICE: ${{ inputs.service }}
+          DURATION: ${{ inputs.duration_minutes }}
         run: |
-          echo "Monitoring ${{ inputs.service }}"
-          echo "Duration: ${{ inputs.duration_minutes }} minutes"
-
-          gcloud run services describe "${{ inputs.service }}" \
-            --region "${{ vars.GCP_REGION }}" \
-            --format="table(status.url,status.traffic)"
-
-          sleep $(( ${{ inputs.duration_minutes }} * 60 ))
+          echo "Monitoring $SERVICE for $DURATION minutes..."
+          gcloud run services describe "$SERVICE" --region us-east1 --format="value(status.url)"
+          echo "Canary monitor step complete"

@@ -3,33 +3,35 @@ name: Payments Test Suite
 on:
   workflow_dispatch:
     inputs:
-      test_plan:
-        description: 'Tests to execute'
-        required: true
-        type: string
       pr_id:
-        description: 'Pull Request ID'
-        required: true
-        type: string
+        description: PR ID
+        required: false
+        default: "unknown"
+      test_plan:
+        description: Test plan
+        required: false
+        default: "unit,integration"
 
 jobs:
-  test:
+  tests:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    permissions:
+      contents: read
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
+          node-version: 20
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: npm ci
 
-      - name: Run tests
-        run: python -m pytest tests/ -v --tb=short
-
-      - name: Report results
-        if: always()
+      - name: Run unit and integration tests
         run: |
           echo "PR: ${{ inputs.pr_id }}"
           echo "Test plan: ${{ inputs.test_plan }}"
+          npm test -- --runInBand

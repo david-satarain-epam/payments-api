@@ -1,37 +1,43 @@
-name: Full Deployment
+name: Deploy Full
 
 on:
   workflow_dispatch:
     inputs:
       service:
-        description: "Cloud Run service name"
+        description: Service to deploy
         required: true
-        type: string
-      revision:
-        description: "Revision to promote"
-        required: true
-        type: string
-
-permissions:
-  contents: read
-  id-token: write
+        default: "payments-api"
+      pr_id:
+        description: PR ID
+        required: false
+        default: "unknown"
 
 jobs:
-  deploy-full:
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
-      - name: Authenticate to Google Cloud
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Set up Google Cloud CLI
+      - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Route all traffic
+      - name: Promote latest revision to 100%
+        env:
+          SERVICE: ${{ inputs.service }}
         run: |
-          gcloud run services update-traffic "${{ inputs.service }}" \
-            --region "${{ vars.GCP_REGION }}" \
-            --to-revisions "${{ inputs.revision }}=100"
+          gcloud run services update-traffic "$SERVICE" \
+            --region us-east1 \
+            --to-latest \
+            --platform managed
+          echo "Full deployment for $SERVICE completed"

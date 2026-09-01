@@ -1,0 +1,58 @@
+name: Deploy Canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      percentage:
+        description: Canary percentage
+        required: true
+        default: "10"
+      service:
+        description: Cloud Run service name
+        required: true
+        default: "payments-api"
+      pr_id:
+        description: PR ID
+        required: false
+        default: "unknown"
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Compute traffic split
+        id: traffic
+        env:
+          CANARY_PERCENT: ${{ fromJSON(inputs.percentage) }}
+          STABLE_PERCENT: ${{ 100 - fromJSON(inputs.percentage) }}
+        run: |
+          echo "canary=$CANARY_PERCENT" >> "$GITHUB_OUTPUT"
+          echo "stable=$STABLE_PERCENT" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy canary to Cloud Run
+        run: |
+          gcloud run services update "$SERVICE" \
+            --region us-east1 \
+            --update-tags=canary=canary-${{ inputs.pr_id }} \
+            --platform managed
+          gcloud run services update-traffic "$SERVICE" \
+            --region us-east1 \
+            --to-revisions="canary-${{ inputs.pr_id }}=${{ steps.traffic.outputs.canary }}"
+        env:
+          SERVICE: ${{ inputs.service }}
